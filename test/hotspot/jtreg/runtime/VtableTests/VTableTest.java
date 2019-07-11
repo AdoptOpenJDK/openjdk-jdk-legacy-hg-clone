@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2018, 2019, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -18,30 +19,32 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
-#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHRUNTIME_HPP
-#define SHARE_GC_SHENANDOAH_SHENANDOAHRUNTIME_HPP
+/*
+ * @test
+ * @bug 8226798
+ * @summary Check that the vTable for class C gets set up without causing
+ *          an assertion failure.
+ * @compile pkg/A.java
+ * @run main VTableTest
+ */
 
-#include "memory/allocation.hpp"
-#include "oops/oopsHierarchy.hpp"
+public class VTableTest {
 
-class JavaThread;
-class oopDesc;
+    interface Intf {
+        public default void m() { }
+        public default void unusedButNeededToReproduceIssue() { }
+    }
 
-class ShenandoahRuntime : public AllStatic {
-public:
-  static void write_ref_array_pre_oop_entry(oop* dst, size_t length);
-  static void write_ref_array_pre_narrow_oop_entry(narrowOop* dst, size_t length);
-  static void write_ref_array_post_entry(HeapWord* dst, size_t length);
-  static void write_ref_field_pre_entry(oopDesc* orig, JavaThread* thread);
+    static class B extends pkg.A implements Intf {
+    }
 
-  static oopDesc* load_reference_barrier_JRT(oopDesc* src);
+    static class C extends B {
+        public void m() { System.out.println("In C.m()"); }
+    }
 
-  static oopDesc* oop_load_from_native_barrier(oopDesc* src);
-
-  static void shenandoah_clone_barrier(oopDesc* obj);
-};
-
-#endif // SHARE_GC_SHENANDOAH_SHENANDOAHRUNTIME_HPP
+    public static void main(String[] args) {
+        new C().m();
+    }
+}
