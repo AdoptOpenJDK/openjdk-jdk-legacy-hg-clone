@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,36 +23,30 @@
  * questions.
  */
 
-package sun.nio.fs;
+package sun.net.www.protocol.file;
 
-import java.io.IOException;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FilePermission;
+import java.net.URL;
+import java.security.Permission;
 
-/**
- * File type detector that uses a file extension to look up its MIME type
- * via the Apple Uniform Type Identifier interfaces.
- */
-class UTIFileTypeDetector extends AbstractFileTypeDetector {
-    UTIFileTypeDetector() {
-        super();
+final class UNCFileURLConnection extends FileURLConnection {
+
+    private final String effectivePath;
+    private volatile Permission permission;
+
+    UNCFileURLConnection(URL u, File file, String effectivePath) {
+        super(u, file);
+        this.effectivePath = effectivePath;
     }
-
-    private native String probe0(String fileExtension) throws IOException;
 
     @Override
-    protected String implProbeContentType(Path path) throws IOException {
-        Path fn = path.getFileName();
-        if (fn == null)
-            return null;  // no file name
-
-        String ext = getExtension(fn.toString());
-        if (ext.isEmpty())
-            return null;  // no extension
-
-        return probe0(ext);
-    }
-
-    static {
-        jdk.internal.loader.BootLoader.loadLibrary("nio");
+    public Permission getPermission() {
+        Permission perm = permission;
+        if (perm == null) {
+            permission = perm = new FilePermission(effectivePath, "read");
+        }
+        return perm;
     }
 }
+
