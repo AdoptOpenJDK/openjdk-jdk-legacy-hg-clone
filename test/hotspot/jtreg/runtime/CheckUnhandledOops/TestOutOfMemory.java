@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 1994, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -23,29 +21,24 @@
  * questions.
  */
 
-/**
- * Plain text file handler.
- * @author  Steven B. Byrne
+/*
+ * @test
+ * @bug 8227766
+ * @run main/othervm -XX:+IgnoreUnrecognizedVMOptions -XX:+CheckUnhandledOops -Xmx100m TestOutOfMemory
  */
-package sun.net.www.content.text;
-import java.net.*;
-import java.io.InputStream;
-import java.io.IOException;
 
-public class plain extends ContentHandler {
-    /**
-     * Returns a PlainTextInputStream object from which data
-     * can be read.
-     */
-    public Object getContent(URLConnection uc) {
+public class TestOutOfMemory {
+    public static void main(java.lang.String[] unused) {
+        final int BIG = 0x100000;
+        // Getting OOM breaks the unhandled oop detector
         try {
-            InputStream is = uc.getInputStream();
-            if (is == null) {
-                is = InputStream.nullInputStream();
+            int[][] X = new int[BIG][];
+            for (int i = 0; i < BIG; i++) {
+                X[i] = new int[BIG];
+                System.out.println("length = " + X.length);
             }
-            return new PlainTextInputStream(is);
-        } catch (IOException e) {
-            return "Error reading document:\n" + e.toString();
-        }
+         } catch (OutOfMemoryError oom) {
+            System.out.println("OOM expected");
+         }
     }
 }
