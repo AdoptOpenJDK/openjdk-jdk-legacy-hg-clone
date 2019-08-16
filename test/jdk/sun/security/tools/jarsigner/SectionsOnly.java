@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,19 +19,31 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
-#ifndef SHARE_OOPS_KLASS_INLINE_HPP
-#define SHARE_OOPS_KLASS_INLINE_HPP
+/*
+ * @test
+ * @bug 8229775
+ * @summary Incorrect warning when jar was signed with -sectionsonly
+ * @library /test/lib
+ */
 
-#include "oops/compressedOops.hpp"
-#include "oops/klass.hpp"
-#include "oops/markOop.hpp"
+import jdk.test.lib.SecurityTools;
+import jdk.test.lib.util.JarUtils;
 
-inline void Klass::set_prototype_header(markWord header) {
-  assert(!header.has_bias_pattern() || is_instance_klass(), "biased locking currently only supported for Java instances");
-  _prototype_header = header;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class SectionsOnly {
+    public static void main(String[] args) throws Exception {
+        String common = "-storepass changeit -keypass changeit -keystore ks ";
+        SecurityTools.keytool(common
+                + "-keyalg rsa -genkeypair -alias me -dname CN=Me");
+        JarUtils.createJarFile(Path.of("so.jar"), Path.of("."),
+                Files.write(Path.of("so.txt"), new byte[0]));
+        SecurityTools.jarsigner(common + "-sectionsonly so.jar me");
+        SecurityTools.jarsigner(common + "-verify -verbose so.jar")
+                .shouldNotContain("Unparsable signature-related file")
+                .shouldHaveExitValue(0);
+    }
 }
-
-#endif // SHARE_OOPS_KLASS_INLINE_HPP

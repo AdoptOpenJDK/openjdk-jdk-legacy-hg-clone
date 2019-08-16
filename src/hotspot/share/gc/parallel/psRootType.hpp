@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,16 +22,29 @@
  *
  */
 
-#ifndef SHARE_OOPS_KLASS_INLINE_HPP
-#define SHARE_OOPS_KLASS_INLINE_HPP
+#ifndef SHARE_GC_PARALLEL_PSROOTTYPE_HPP
+#define SHARE_GC_PARALLEL_PSROOTTYPE_HPP
 
-#include "oops/compressedOops.hpp"
-#include "oops/klass.hpp"
-#include "oops/markOop.hpp"
+#include "memory/allocation.hpp"
+#include "utilities/macros.hpp"
 
-inline void Klass::set_prototype_header(markWord header) {
-  assert(!header.has_bias_pattern() || is_instance_klass(), "biased locking currently only supported for Java instances");
-  _prototype_header = header;
-}
+class ParallelRootType : public AllStatic {
+public:
+  // Order and compactness of this enum is of importance.
+  // The order reflects the order these roots are to be processed,
+  // We do not want any holes in the enum as we enumerate these values by incrementing them.
+  enum Value {
+    universe,
+    jni_handles,
+    object_synchronizer,
+    management,
+    system_dictionary,
+    class_loader_data,
+    jvmti,
+    code_cache,
+    //"threads" are handled in parallel as a special case
+    sentinel
+  };
+};
 
-#endif // SHARE_OOPS_KLASS_INLINE_HPP
+#endif /* SHARE_GC_PARALLEL_PSROOTTYPE_HPP */
