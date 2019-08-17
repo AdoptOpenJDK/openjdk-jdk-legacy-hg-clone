@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,32 +19,27 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
-#ifndef SHARE_GC_G1_G1EVACFAILURE_HPP
-#define SHARE_GC_G1_G1EVACFAILURE_HPP
+package org.openjdk.bench.java.lang;
 
-#include "gc/g1/g1OopClosures.hpp"
-#include "gc/g1/heapRegionManager.hpp"
-#include "gc/shared/workgroup.hpp"
-#include "utilities/globalDefinitions.hpp"
+import org.openjdk.jmh.annotations.*;
+import java.util.concurrent.TimeUnit;
 
-class G1CollectedHeap;
-class G1RedirtyCardsQueueSet;
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@State(Scope.Benchmark)
+public class StringSubstring {
 
-// Task to fixup self-forwarding pointers
-// installed as a result of an evacuation failure.
-class G1ParRemoveSelfForwardPtrsTask: public AbstractGangTask {
-protected:
-  G1CollectedHeap* _g1h;
-  G1RedirtyCardsQueueSet* _rdcqs;
-  HeapRegionClaimer _hrclaimer;
+    public String s = new String("An arbitrary string that happened to be of length 52");
 
-public:
-  G1ParRemoveSelfForwardPtrsTask(G1RedirtyCardsQueueSet* rdcqs);
+    @Benchmark
+    public String from26toEnd0() {
+        return s.substring(26);
+    }
 
-  void work(uint worker_id);
-};
-
-#endif // SHARE_GC_G1_G1EVACFAILURE_HPP
+    @Benchmark
+    public String from26toEnd1() {
+        return s.substring(26, s.length());
+    }
+}
