@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Loongson Technology Co. Ltd. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,18 +19,21 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
+ */
+
+/*
+ * @test
+ * @bug 8230943
+ * @summary possible deadlock was detected when ran with -XX:+CIPrintCompileQueue
+ * @run main/othervm -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+CIPrintCompileQueue
+ *                   compiler.print.PrintCompileQueue
  *
  */
 
-#include "precompiled.hpp"
-#include "oops/access.inline.hpp"
-#include "oops/accessDecorators.hpp"
+package compiler.print;
 
-// This macro allows instantiating selected accesses to be usable from the
-// access.hpp file, to break dependencies to the access.inline.hpp file.
-#define INSTANTIATE_HPP_ACCESS(decorators, T, barrier_type)  \
-  template struct RuntimeDispatch<DecoratorFixup<decorators>::value, T, barrier_type>
-
-namespace AccessInternal {
-  INSTANTIATE_HPP_ACCESS(DECORATORS_NONE, oop, BARRIER_EQUALS);
+public class PrintCompileQueue {
+    public static void main(String[] args) {
+        System.out.println("Passed");
+    }
 }
