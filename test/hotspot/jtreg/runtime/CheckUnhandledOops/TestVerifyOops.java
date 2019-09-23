@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,29 +19,18 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
-#include "gc/g1/g1CodeBlobClosure.hpp"
-#include "gc/g1/g1OopClosures.hpp"
-#include "memory/iterator.hpp"
+/*
+ * @test
+ * @bug 8231058
+ * @requires vm.debug & (os.arch != "sparc") & (os.arch != "sparcv9")
+ * @run main/othervm -XX:+VerifyOops TestVerifyOops
+ */
 
-class G1CollectedHeap;
-class G1ParScanThreadState;
+public class TestVerifyOops {
 
-// Simple holder object for a complete set of closures used by the G1 evacuation code.
-template <G1Mark Mark>
-class G1SharedClosures {
-public:
-  G1ParCopyClosure<G1BarrierNone, Mark> _oops;
-  G1ParCopyClosure<G1BarrierCLD,  Mark> _oops_in_cld;
-
-  G1CLDScanClosure                _clds;
-  G1CodeBlobClosure               _codeblobs;
-
-  G1SharedClosures(G1CollectedHeap* g1h, G1ParScanThreadState* pss, bool process_only_dirty) :
-    _oops(g1h, pss),
-    _oops_in_cld(g1h, pss),
-    _clds(&_oops_in_cld, process_only_dirty),
-    _codeblobs(&_oops) {}
-};
+    public static void main(String[] args) {
+        System.out.println("Test passed");
+    }
+}
