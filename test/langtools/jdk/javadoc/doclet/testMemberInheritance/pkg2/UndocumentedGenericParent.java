@@ -21,27 +21,13 @@
  * questions.
  */
 
-#include <jni.h>
+package pkg2;
 
-jmethodID mid;
-jclass cls;
-static int count = 0;
-
-JNIEXPORT jint JNICALL
-Java_RedefineDeleteJmethod_jniCallDeleteMe(JNIEnv* env, jobject obj) {
-
-    if (count == 0) {
-      count++;
-      cls = (*env)->FindClass(env, "B");
-      if (NULL == cls) {
-          (*env)->FatalError(env, "could not find class");
-      }
-
-      mid = (*env)->GetStaticMethodID(env, cls, "deleteMe", "()I");
-      if (NULL == mid) {
-          (*env)->FatalError(env, "could not find method");
-      }
-    }
-
-    return (*env)->CallStaticIntMethod(env, cls, mid);
+abstract class UndocumentedGenericParent<T> {
+    /**
+     * Returns some value.
+     *
+     * @return some value
+     */
+    protected abstract String parentMethod();
 }
