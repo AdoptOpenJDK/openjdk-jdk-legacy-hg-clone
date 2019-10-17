@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 1998, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019 SAP SE. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -21,30 +20,22 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- */
-
-package com.sun.jdi;
-
-/**
- * Thrown to indicate an exception occurred in an invoked method within
- * the target VM.
  *
- * @author Gordon Hirsch
- * @since  1.3
  */
-public class InvocationException extends Exception {
 
-    private static final long serialVersionUID = 6066780907971918568L;
+#ifndef SHARE_INTERPRETER_BYTECODEUTILS_HPP
+#define SHARE_INTERPRETER_BYTECODEUTILS_HPP
 
-    @SuppressWarnings("serial") // Not statically typed as Serializable
-    ObjectReference exception;
+#include "memory/allocation.hpp"
+#include "utilities/globalDefinitions.hpp"
 
-    public InvocationException(ObjectReference exception) {
-        super("Exception occurred in target VM");
-        this.exception = exception;
-    }
+class Method;
+class outputStream;
 
-    public ObjectReference exception() {
-        return exception;
-    }
-}
+class BytecodeUtils : public AllStatic {
+ public:
+  // NPE extended message. Return true if string is printed.
+  static bool get_NPE_message_at(outputStream* ss, Method* method, int bci);
+};
+
+#endif // SHARE_INTERPRETER_BYTECODEUTILS_HPP

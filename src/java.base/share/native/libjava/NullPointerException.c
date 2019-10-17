@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 1998, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019 SAP SE. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,35 +24,13 @@
  * questions.
  */
 
-package com.sun.jdi.connect;
+#include "jni.h"
+#include "jvm.h"
 
-/**
- * A target VM was successfully launched, but terminated with an
- * error before a connection could be established. This exception
- * provides the {@link java.lang.Process} object for the launched
- * target to help in diagnosing the problem.
- *
- * @author Gordon Hirsch
- * @since  1.3
- */
-public class VMStartException extends Exception {
+#include "java_lang_NullPointerException.h"
 
-    private static final long serialVersionUID = 6408644824640801020L;
-
-    @SuppressWarnings("serial") // Not statically typed as Serializable
-    Process process;
-
-    public VMStartException(Process process) {
-        super();
-        this.process = process;
-    }
-
-    public VMStartException(String message, Process process) {
-        super(message);
-        this.process = process;
-    }
-
-    public Process process() {
-        return process;
-    }
+JNIEXPORT jstring JNICALL
+Java_java_lang_NullPointerException_getExtendedNPEMessage(JNIEnv *env, jobject throwable)
+{
+    return JVM_GetExtendedNPEMessage(env, throwable);
 }
