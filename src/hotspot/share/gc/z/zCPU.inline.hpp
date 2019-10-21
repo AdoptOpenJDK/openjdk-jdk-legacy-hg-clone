@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,20 +21,27 @@
  * questions.
  */
 
-#ifndef SHARE_GC_Z_ZWEAKROOTSPROCESSOR_HPP
-#define SHARE_GC_Z_ZWEAKROOTSPROCESSOR_HPP
+#ifndef SHARE_GC_Z_ZCPU_INLINE_HPP
+#define SHARE_GC_Z_ZCPU_INLINE_HPP
 
-class ZWorkers;
+#include "gc/z/zCPU.hpp"
+#include "runtime/os.hpp"
+#include "utilities/debug.hpp"
 
-class ZWeakRootsProcessor {
-private:
-  ZWorkers* const _workers;
+inline uint32_t ZCPU::count() {
+  return os::processor_count();
+}
 
-public:
-  ZWeakRootsProcessor(ZWorkers* workers);
+inline uint32_t ZCPU::id() {
+  assert(_affinity != NULL, "Not initialized");
 
-  void process_weak_roots();
-  void process_concurrent_weak_roots();
-};
+  // Fast path
+  if (_affinity[_cpu]._thread == _self) {
+    return _cpu;
+  }
 
-#endif // SHARE_GC_Z_ZWEAKROOTSPROCESSOR_HPP
+  // Slow path
+  return id_slow();
+}
+
+#endif // SHARE_GC_Z_ZCPU_INLINE_HPP
