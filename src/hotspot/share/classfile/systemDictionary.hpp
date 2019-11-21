@@ -219,7 +219,6 @@ class GCTimer;
                                                                                                                 \
   /*end*/
 
-
 class SystemDictionary : AllStatic {
   friend class BootstrapInfo;
   friend class VMStructs;
@@ -383,7 +382,6 @@ public:
     int limit = (int)end_id + 1;
     resolve_wk_klasses_until((WKID) limit, start_id, THREAD);
   }
-
 public:
   #define WK_KLASS_DECLARE(name, symbol) \
     static InstanceKlass* name() { return check_klass(_well_known_klasses[WK_KLASS_ENUM_NAME(name)]); } \
@@ -466,17 +464,17 @@ public:
   // JSR 292
   // find a java.lang.invoke.MethodHandle.invoke* method for a given signature
   // (asks Java to compute it if necessary, except in a compiler thread)
-  static methodHandle find_method_handle_invoker(Klass* klass,
-                                                 Symbol* name,
-                                                 Symbol* signature,
-                                                 Klass* accessing_klass,
-                                                 Handle *appendix_result,
-                                                 TRAPS);
+  static Method* find_method_handle_invoker(Klass* klass,
+                                            Symbol* name,
+                                            Symbol* signature,
+                                            Klass* accessing_klass,
+                                            Handle *appendix_result,
+                                            TRAPS);
   // for a given signature, find the internal MethodHandle method (linkTo* or invokeBasic)
   // (does not ask Java, since this is a low-level intrinsic defined by the JVM)
-  static methodHandle find_method_handle_intrinsic(vmIntrinsics::ID iid,
-                                                   Symbol* signature,
-                                                   TRAPS);
+  static Method* find_method_handle_intrinsic(vmIntrinsics::ID iid,
+                                              Symbol* signature,
+                                              TRAPS);
 
   // compute java_mirror (java.lang.Class instance) for a type ("I", "[[B", "LFoo;", etc.)
   // Either the accessing_klass or the CL/PD can be non-null, but not both.
@@ -627,21 +625,6 @@ protected:
 
   // Basic find on classes in the midst of being loaded
   static Symbol* find_placeholder(Symbol* name, ClassLoaderData* loader_data);
-
-  // Add a placeholder for a class being loaded
-  static void add_placeholder(int index,
-                              Symbol* class_name,
-                              ClassLoaderData* loader_data);
-  static void remove_placeholder(int index,
-                                 Symbol* class_name,
-                                 ClassLoaderData* loader_data);
-
-  // Performs cleanups after resolve_super_or_fail. This typically needs
-  // to be called on failure.
-  // Won't throw, but can block.
-  static void resolution_cleanups(Symbol* class_name,
-                                  ClassLoaderData* loader_data,
-                                  TRAPS);
 
   // Resolve well-known classes so they can be used like SystemDictionary::String_klass()
   static void resolve_well_known_classes(TRAPS);

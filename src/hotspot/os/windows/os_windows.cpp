@@ -795,6 +795,10 @@ int os::active_processor_count() {
   }
 }
 
+uint os::processor_id() {
+  return (uint)GetCurrentProcessorNumber();
+}
+
 void os::set_native_thread_name(const char *name) {
 
   // See: http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
@@ -3443,6 +3447,10 @@ size_t os::numa_get_leaf_groups(int *ids, size_t size) {
   }
 }
 
+int os::numa_get_group_id_for_address(const void* address) {
+  return 0;
+}
+
 bool os::get_page_info(char *start, page_info* info) {
   return false;
 }
@@ -5684,7 +5692,7 @@ static void call_wrapper_dummy() {}
 // up the offset from FS of the thread pointer.
 void os::win32::initialize_thread_ptr_offset() {
   os::os_exception_wrapper((java_call_t)call_wrapper_dummy,
-                           NULL, NULL, NULL, NULL);
+                           NULL, methodHandle(), NULL, NULL);
 }
 
 bool os::supports_map_sync() {

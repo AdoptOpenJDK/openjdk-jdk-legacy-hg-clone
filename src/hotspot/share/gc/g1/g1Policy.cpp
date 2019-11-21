@@ -68,7 +68,7 @@ G1Policy::G1Policy(STWGCTimer* gc_timer) :
   _reserve_regions(0),
   _young_gen_sizer(G1YoungGenSizer::create_gen_sizer()),
   _free_regions_at_end_of_collection(0),
-  _max_rs_length(0),
+  _rs_length(0),
   _rs_length_prediction(0),
   _pending_cards_at_gc_start(0),
   _pending_cards_at_prev_gc_end(0),
@@ -78,7 +78,6 @@ G1Policy::G1Policy(STWGCTimer* gc_timer) :
   _bytes_allocated_in_old_since_last_gc(0),
   _initial_mark_to_mixed(),
   _collection_set(NULL),
-  _bytes_copied_during_gc(0),
   _g1h(NULL),
   _phase_times(new G1GCPhaseTimes(gc_timer, ParallelGCThreads)),
   _mark_remark_start_sec(0),
@@ -330,8 +329,7 @@ G1Policy::calculate_young_list_target_length(size_t rs_length,
   const double target_pause_time_ms = _mmu_tracker->max_gc_time() * 1000.0;
   const double survivor_regions_evac_time = predict_survivor_regions_evac_time();
   const size_t pending_cards = _analytics->predict_pending_cards();
-  const size_t adj_rs_length = rs_length + _analytics->predict_rs_length_diff();
-  const size_t scanned_cards = _analytics->predict_card_num(adj_rs_length, true /* for_young_gc */);
+  const size_t scanned_cards = _analytics->predict_card_num(rs_length, true /* for_young_gc */);
   const double base_time_ms =
     predict_base_elapsed_time_ms(pending_cards, scanned_cards) +
     survivor_regions_evac_time;
@@ -554,7 +552,6 @@ void G1Policy::record_collection_pause_start(double start_time_sec) {
   record_concurrent_refinement_data(false /* is_full_collection */);
 
   _collection_set->reset_bytes_used_before();
-  _bytes_copied_during_gc = 0;
 
   // do that for any other surv rate groups
   _short_lived_surv_rate_group->stop_adding_regions();
@@ -648,13 +645,11 @@ double G1Policy::logged_cards_processing_time() const {
 // Anything below that is considered to be zero
 #define MIN_TIMER_GRANULARITY 0.0000001
 
-void G1Policy::record_collection_pause_end(double pause_time_ms, size_t heap_used_bytes_before_gc) {
+void G1Policy::record_collection_pause_end(double pause_time_ms) {
   G1GCPhaseTimes* p = phase_times();
 
   double end_time_sec = os::elapsedTime();
 
-  assert_used_and_recalculate_used_equal(_g1h);
-  size_t cur_used_bytes = _g1h->used();
   bool this_pause_included_initial_mark = false;
   bool this_pause_was_young_only = collector_state()->in_young_only_phase();
 
@@ -753,13 +748,13 @@ void G1Policy::record_collection_pause_end(double pause_time_ms, size_t heap_use
       _analytics->report_cost_per_remset_card_ms(cost_per_remset_card_ms, this_pause_was_young_only);
     }
 
-    if (_max_rs_length > 0) {
+    if (_rs_length > 0) {
       double cards_per_entry_ratio =
-        (double) remset_cards_scanned / (double) _max_rs_length;
+        (double) remset_cards_scanned / (double) _rs_length;
       _analytics->report_cards_per_entry_ratio(cards_per_entry_ratio, this_pause_was_young_only);
     }
 
-    // This is defensive. For a while _max_rs_length could get
+    // This is defensive. For a while _rs_length could get
     // smaller than _recorded_rs_length which was causing
     // rs_length_diff to get very large and mess up the RSet length
     // predictions. The reason was unsafe concurrent updates to the
@@ -774,17 +769,15 @@ void G1Policy::record_collection_pause_end(double pause_time_ms, size_t heap_use
     // conditional below just in case.
     size_t rs_length_diff = 0;
     size_t recorded_rs_length = _collection_set->recorded_rs_length();
-    if (_max_rs_length > recorded_rs_length) {
-      rs_length_diff = _max_rs_length - recorded_rs_length;
+    if (_rs_length > recorded_rs_length) {
+      rs_length_diff = _rs_length - recorded_rs_length;
     }
     _analytics->report_rs_length_diff((double) rs_length_diff);
 
-    size_t freed_bytes = heap_used_bytes_before_gc - cur_used_bytes;
-    size_t copied_bytes = _collection_set->bytes_used_before() - freed_bytes;
-    double cost_per_byte_ms = 0.0;
+    size_t copied_bytes = p->sum_thread_work_items(G1GCPhaseTimes::MergePSS, G1GCPhaseTimes::MergePSSCopiedBytes);
 
     if (copied_bytes > 0) {
-      cost_per_byte_ms = (average_time_ms(G1GCPhaseTimes::ObjCopy) + average_time_ms(G1GCPhaseTimes::OptObjCopy)) / (double) copied_bytes;
+      double cost_per_byte_ms = (average_time_ms(G1GCPhaseTimes::ObjCopy) + average_time_ms(G1GCPhaseTimes::OptObjCopy)) / copied_bytes;
       _analytics->report_cost_per_byte_ms(cost_per_byte_ms, collector_state()->mark_or_rebuild_in_progress());
     }
 
@@ -806,7 +799,7 @@ void G1Policy::record_collection_pause_end(double pause_time_ms, size_t heap_use
     // During mixed gc we do not use them for young gen sizing.
     if (this_pause_was_young_only) {
       _analytics->report_pending_cards((double) _pending_cards_at_gc_start);
-      _analytics->report_rs_length((double) _max_rs_length);
+      _analytics->report_rs_length((double) _rs_length);
     }
   }
 
@@ -951,7 +944,7 @@ double G1Policy::predict_base_elapsed_time_ms(size_t pending_cards,
 }
 
 double G1Policy::predict_base_elapsed_time_ms(size_t pending_cards) const {
-  size_t rs_length = _analytics->predict_rs_length() + _analytics->predict_rs_length_diff();
+  size_t rs_length = _analytics->predict_rs_length();
   size_t card_num = _analytics->predict_card_num(rs_length, collector_state()->in_young_only_phase());
   return predict_base_elapsed_time_ms(pending_cards, card_num);
 }
