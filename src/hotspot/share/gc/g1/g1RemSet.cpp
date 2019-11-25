@@ -177,9 +177,9 @@ private:
         return;
       }
 
-      bool marked_as_dirty = Atomic::cmpxchg(true, &_contains[region], false) == false;
+      bool marked_as_dirty = Atomic::cmpxchg(&_contains[region], false, true) == false;
       if (marked_as_dirty) {
-        uint allocated = Atomic::add(1u, &_cur_idx) - 1;
+        uint allocated = Atomic::add(&_cur_idx, 1u) - 1;
         _buffer[allocated] = region;
       }
     }
@@ -255,7 +255,7 @@ private:
 
     void work(uint worker_id) {
       while (_cur_dirty_regions < _regions->size()) {
-        uint next = Atomic::add(_chunk_length, &_cur_dirty_regions) - _chunk_length;
+        uint next = Atomic::add(&_cur_dirty_regions, _chunk_length) - _chunk_length;
         uint max = MIN2(next + _chunk_length, _regions->size());
 
         for (uint i = next; i < max; i++) {
@@ -437,7 +437,7 @@ public:
     if (_collection_set_iter_state[region]) {
       return false;
     }
-    return !Atomic::cmpxchg(true, &_collection_set_iter_state[region], false);
+    return !Atomic::cmpxchg(&_collection_set_iter_state[region], false, true);
   }
 
   bool has_cards_to_scan(uint region) {
@@ -447,7 +447,7 @@ public:
 
   uint claim_cards_to_scan(uint region, uint increment) {
     assert(region < _max_regions, "Tried to access invalid region %u", region);
-    return Atomic::add(increment, &_card_table_scan_state[region]) - increment;
+    return Atomic::add(&_card_table_scan_state[region], increment) - increment;
   }
 
   void add_dirty_region(uint const region) {
@@ -1137,7 +1137,7 @@ public:
     if (_initial_evacuation &&
         p->fast_reclaim_humongous_candidates() > 0 &&
         !_fast_reclaim_handled &&
-        !Atomic::cmpxchg(true, &_fast_reclaim_handled, false)) {
+        !Atomic::cmpxchg(&_fast_reclaim_handled, false, true)) {
 
       G1GCParPhaseTimesTracker x(p, G1GCPhaseTimes::MergeER, worker_id);
 

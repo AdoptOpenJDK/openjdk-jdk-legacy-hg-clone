@@ -240,7 +240,7 @@ bool ObjectSynchronizer::quick_enter(oop obj, Thread* self,
     // and last are the inflated Java Monitor (ObjectMonitor) checks.
     lock->set_displaced_header(markWord::unused_mark());
 
-    if (owner == NULL && Atomic::replace_if_null(self, &(m->_owner))) {
+    if (owner == NULL && Atomic::replace_if_null(&(m->_owner), self)) {
       assert(m->_recursions == 0, "invariant");
       return true;
     }
@@ -749,7 +749,7 @@ intptr_t ObjectSynchronizer::FastHashCode(Thread* self, oop obj) {
     hash = get_next_hash(self, obj);  // get a new hash
     temp = mark.copy_set_hash(hash);  // merge the hash into header
     assert(temp.is_neutral(), "invariant: header=" INTPTR_FORMAT, temp.value());
-    uintptr_t v = Atomic::cmpxchg(temp.value(), (volatile uintptr_t*)monitor->header_addr(), mark.value());
+    uintptr_t v = Atomic::cmpxchg((volatile uintptr_t*)monitor->header_addr(), mark.value(), temp.value());
     test = markWord(v);
     if (test != mark) {
       // The attempt to update the ObjectMonitor's header/dmw field
@@ -889,7 +889,7 @@ JavaThread* ObjectSynchronizer::get_lock_owner(ThreadsList * t_list, Handle h_ob
 // Visitors ...
 
 void ObjectSynchronizer::monitors_iterate(MonitorClosure* closure) {
-  PaddedObjectMonitor* block = OrderAccess::load_acquire(&g_block_list);
+  PaddedObjectMonitor* block = Atomic::load_acquire(&g_block_list);
   while (block != NULL) {
     assert(block->object() == CHAINMARKER, "must be a block header");
     for (int i = _BLOCKSIZE - 1; i > 0; i--) {
@@ -998,7 +998,7 @@ static void InduceScavenge(Thread* self, const char * Whence) {
   // of active monitors passes the specified threshold.
   // TODO: assert thread state is reasonable
 
-  if (ForceMonitorScavenge == 0 && Atomic::xchg (1, &ForceMonitorScavenge) == 0) {
+  if (ForceMonitorScavenge == 0 && Atomic::xchg(&ForceMonitorScavenge, 1) == 0) {
     // Induce a 'null' safepoint to scavenge monitors
     // Must VM_Operation instance be heap allocated as the op will be enqueue and posted
     // to the VMthread and have a lifespan longer than that of this activation record.
@@ -1118,7 +1118,7 @@ ObjectMonitor* ObjectSynchronizer::om_alloc(Thread* self) {
     temp[0]._next_om = g_block_list;
     // There are lock-free uses of g_block_list so make sure that
     // the previous stores happen before we update g_block_list.
-    OrderAccess::release_store(&g_block_list, temp);
+    Atomic::release_store(&g_block_list, temp);
 
     // Add the new string of ObjectMonitors to the global free list
     temp[_BLOCKSIZE - 1]._next_om = g_free_list;
@@ -2169,7 +2169,7 @@ int ObjectSynchronizer::log_monitor_list_counts(outputStream * out) {
 // the list of extant blocks without taking a lock.
 
 int ObjectSynchronizer::verify_objmon_isinpool(ObjectMonitor *monitor) {
-  PaddedObjectMonitor* block = OrderAccess::load_acquire(&g_block_list);
+  PaddedObjectMonitor* block = Atomic::load_acquire(&g_block_list);
   while (block != NULL) {
     assert(block->object() == CHAINMARKER, "must be a block header");
     if (monitor > &block[0] && monitor < &block[_BLOCKSIZE]) {
