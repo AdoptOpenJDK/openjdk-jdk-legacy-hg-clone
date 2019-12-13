@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,32 +21,30 @@
  * questions.
  */
 
-package gc.startup_warnings;
+package custom;
 
-/*
-* @test TestParallelScavengeSerialOld
-* @key gc
-* @bug 8006398
-* @requires vm.gc.Parallel
-* @summary Test that the ParallelScavenge+SerialOld combination prints a deprecation message
-* @library /test/lib
-* @modules java.base/jdk.internal.misc
-*          java.management
-* @run main gc.startup_warnings.TestParallelScavengeSerialOld
-*/
+import java.time.ZoneId;
+import java.time.zone.ZoneRules;
+import java.time.zone.ZoneRulesProvider;
+import java.util.Set;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
-import jdk.test.lib.process.ProcessTools;
-import jdk.test.lib.process.OutputAnalyzer;
+public class CustomZoneRulesProvider extends ZoneRulesProvider {
+    @Override
+    protected Set<String> provideZoneIds() {
+        return Set.of("Custom/Timezone");
+    }
 
+    @Override
+    protected ZoneRules provideRules(String zoneId, boolean forCaching) {
+        return ZoneId.of("UTC").getRules();
+    }
 
-public class TestParallelScavengeSerialOld {
-
-  public static void main(String args[]) throws Exception {
-    ProcessBuilder pb = ProcessTools.createJavaProcessBuilder("-XX:+UseParallelGC", "-XX:-UseParallelOldGC", "-version");
-    OutputAnalyzer output = new OutputAnalyzer(pb.start());
-    output.shouldContain("deprecated");
-    output.shouldNotContain("error");
-    output.shouldHaveExitValue(0);
-  }
-
+    @Override
+    protected NavigableMap<String, ZoneRules> provideVersions(String zoneId) {
+        var map = new TreeMap<String, ZoneRules>();
+        map.put("bogusVersion", getRules(zoneId, false));
+        return map;
+    }
 }
