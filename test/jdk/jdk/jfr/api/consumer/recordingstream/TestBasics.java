@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,19 +23,39 @@
  * questions.
  */
 
-package jdk.jfr.event.gc.objectcount;
-import jdk.test.lib.jfr.GCHelper;
+package jdk.jfr.api.consumer.recordingstream;
+
+import java.util.concurrent.CountDownLatch;
+
+import jdk.jfr.Event;
+import jdk.jfr.consumer.RecordingStream;
 
 /**
  * @test
+ * @summary Basic/sanity test for JFR event streaming
  * @key jfr
  * @requires vm.hasJFR
- * @requires vm.gc == "Parallel" | vm.gc == null
  * @library /test/lib /test/jdk
- * @run main/othervm -XX:+UseParallelGC -XX:-UseParallelOldGC -XX:+UnlockExperimentalVMOptions -XX:-UseFastUnorderedTimeStamps -XX:MarkSweepDeadRatio=0 -XX:-UseCompressedOops -XX:+IgnoreUnrecognizedVMOptions jdk.jfr.event.gc.objectcount.TestObjectCountAfterGCEventWithPSMarkSweep
+ * @run main/othervm jdk.jfr.api.consumer.recordingstream.TestBasics
  */
-public class TestObjectCountAfterGCEventWithPSMarkSweep {
-    public static void main(String[] args) throws Exception {
-        ObjectCountAfterGCEvent.test(GCHelper.gcSerialOld);
+public class TestBasics {
+
+    static class TestEvent extends Event {
+    }
+
+    public static void main(String... args) throws Exception {
+        CountDownLatch eventDelivered = new CountDownLatch(1);
+        CountDownLatch streamClosed = new CountDownLatch(1);
+
+        try (RecordingStream r = new RecordingStream()) {
+            r.onEvent(e -> eventDelivered.countDown());
+            r.onClose(() -> streamClosed.countDown());
+
+            r.startAsync();
+            TestEvent e = new TestEvent();
+            e.commit();
+            eventDelivered.await();
+        }
+        streamClosed.await();
     }
 }
