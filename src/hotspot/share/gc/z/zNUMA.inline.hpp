@@ -21,31 +21,13 @@
  * questions.
  */
 
-#ifndef OS_BSD_GC_Z_ZPHYSICALMEMORYBACKING_BSD_HPP
-#define OS_BSD_GC_Z_ZPHYSICALMEMORYBACKING_BSD_HPP
+#ifndef SHARE_GC_Z_ZNUMA_INLINE_HPP
+#define SHARE_GC_Z_ZNUMA_INLINE_HPP
 
-class ZPhysicalMemoryBacking {
-private:
-  uintptr_t _base;
-  size_t    _size;
-  bool      _initialized;
+#include "gc/z/zNUMA.hpp"
 
-  bool commit_inner(size_t offset, size_t length);
+inline bool ZNUMA::is_enabled() {
+  return _enabled;
+}
 
-public:
-  ZPhysicalMemoryBacking();
-
-  bool is_initialized() const;
-
-  void warn_commit_limits(size_t max) const;
-
-  size_t size() const;
-
-  size_t commit(size_t offset, size_t length);
-  size_t uncommit(size_t offset, size_t length);
-
-  void map(uintptr_t addr, size_t size, uintptr_t offset) const;
-  void unmap(uintptr_t addr, size_t size) const;
-};
-
-#endif // OS_BSD_GC_Z_ZPHYSICALMEMORYBACKING_BSD_HPP
+#endif // SHARE_GC_Z_ZNUMA_INLINE_HPP

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,36 +21,32 @@
  * questions.
  */
 
-#ifndef OS_WINDOWS_GC_Z_ZBACKINGFILE_WINDOWS_HPP
-#define OS_WINDOWS_GC_Z_ZBACKINGFILE_WINDOWS_HPP
+#ifndef OS_LINUX_GC_Z_ZMOUNTPOINT_LINUX_HPP
+#define OS_LINUX_GC_Z_ZMOUNTPOINT_LINUX_HPP
 
-#include "gc/z/zGranuleMap.hpp"
+#include "gc/z/zArray.hpp"
 #include "memory/allocation.hpp"
 
-#include <Windows.h>
-
-class ZBackingFile {
+class ZMountPoint : public StackObj {
 private:
-  ZGranuleMap<HANDLE> _handles;
-  size_t              _size;
+  char* _path;
 
-  HANDLE get_handle(uintptr_t offset) const;
-  void put_handle(uintptr_t offset, HANDLE handle);
-  void clear_handle(uintptr_t offset);
-
-  size_t commit_from_paging_file(size_t offset, size_t size);
-  size_t uncommit_from_paging_file(size_t offset, size_t size);
+  char* get_mountpoint(const char* line,
+                       const char* filesystem) const;
+  void get_mountpoints(const char* filesystem,
+                       ZArray<char*>* mountpoints) const;
+  void free_mountpoints(ZArray<char*>* mountpoints) const;
+  char* find_preferred_mountpoint(const char* filesystem,
+                                  ZArray<char*>* mountpoints,
+                                  const char** preferred_mountpoints) const;
+  char* find_mountpoint(const char* filesystem,
+                        const char** preferred_mountpoints) const;
 
 public:
-  ZBackingFile();
+  ZMountPoint(const char* filesystem, const char** preferred_mountpoints);
+  ~ZMountPoint();
 
-  size_t size() const;
-
-  size_t commit(size_t offset, size_t length);
-  size_t uncommit(size_t offset, size_t length);
-
-  void map(uintptr_t addr, size_t size, size_t offset) const;
-  void unmap(uintptr_t addr, size_t size) const;
+  const char* get() const;
 };
 
-#endif // OS_WINDOWS_GC_Z_ZBACKINGFILE_WINDOWS_HPP
+#endif // OS_LINUX_GC_Z_ZMOUNTPOINT_LINUX_HPP
