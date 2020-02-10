@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Red Hat, Inc. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,19 +21,31 @@
  * questions.
  */
 
-/*
+/**
  * @test
- * @summary run CTW for some classes from jdk.localedata module
+ * @bug 8237837
+ * @summary  Shenandoah: assert(mem == __null) failed: only one safepoint
+ * @key gc
+ * @requires vm.flavor == "server"
+ * @requires vm.gc.Shenandoah & !vm.graal.enabled
  *
- * @library /test/lib / /testlibrary/ctw/src
- * @modules java.base/jdk.internal.access
- *          java.base/jdk.internal.jimage
- *          java.base/jdk.internal.misc
- *          java.base/jdk.internal.reflect
- * @modules jdk.localedata
+ * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xcomp -XX:CompileOnly=BarrierInInfiniteLoop::test -XX:CompileCommand=quiet BarrierInInfiniteLoop
  *
- * @build sun.hotspot.WhiteBox
- * @run driver ClassFileInstaller sun.hotspot.WhiteBox
- *                                sun.hotspot.WhiteBox$WhiteBoxPermission
- * @run driver/timeout=7200 sun.hotspot.tools.ctw.CtwRunner modules:jdk.localedata 0% 50%
  */
+
+public class BarrierInInfiniteLoop {
+    private static Object field1 = new Object();
+    private static Object field2 = new Object();
+
+    public static void main(String[] args) {
+        test(false);
+    }
+
+    private static void test(boolean flag) {
+        if (flag) {
+            for (;;) {
+                field1 = field2;
+            }
+        }
+    }
+}

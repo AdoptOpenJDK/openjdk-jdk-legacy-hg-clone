@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,19 +21,35 @@
  * questions.
  */
 
-/*
- * @test
- * @summary run CTW for some classes from jdk.localedata module
- *
- * @library /test/lib / /testlibrary/ctw/src
- * @modules java.base/jdk.internal.access
- *          java.base/jdk.internal.jimage
- *          java.base/jdk.internal.misc
- *          java.base/jdk.internal.reflect
- * @modules jdk.localedata
- *
- * @build sun.hotspot.WhiteBox
- * @run driver ClassFileInstaller sun.hotspot.WhiteBox
- *                                sun.hotspot.WhiteBox$WhiteBoxPermission
- * @run driver/timeout=7200 sun.hotspot.tools.ctw.CtwRunner modules:jdk.localedata 0% 50%
- */
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.naming.spi.InitialContextFactory;
+import java.util.Hashtable;
+
+public class DummyContextFactory2 implements InitialContextFactory {
+    static int counter = 0;
+
+    public DummyContextFactory2() {
+        System.out.println("New DummyContextFactory2 " + (++counter));
+        //new Throwable().printStackTrace(System.out);
+    }
+
+    @Override
+    public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
+        return new DummyContext(environment);
+    }
+
+    public class DummyContext extends InitialContext {
+
+        private Hashtable env;
+
+        DummyContext(Hashtable env) throws NamingException {
+            this.env = env;
+        }
+
+        public Hashtable getEnvironment() {
+            return env;
+        }
+    }
+}
