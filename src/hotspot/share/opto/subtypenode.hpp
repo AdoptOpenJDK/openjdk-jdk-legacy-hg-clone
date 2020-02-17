@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,24 +19,36 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
+ *
  */
 
-#include "precompiled.hpp"
-#include "gc/z/zMarkCache.inline.hpp"
-#include "utilities/globalDefinitions.hpp"
-#include "utilities/powerOfTwo.hpp"
+#ifndef SHARE_OPTO_SUBTYPENODE_HPP
+#define SHARE_OPTO_SUBTYPENODE_HPP
 
-ZMarkCacheEntry::ZMarkCacheEntry() :
-    _page(NULL),
-    _objects(0),
-    _bytes(0) {}
+#include "opto/node.hpp"
 
-ZMarkCache::ZMarkCache(size_t nstripes) :
-    _shift(ZMarkStripeShift + exact_log2(nstripes)) {}
+class SubTypeCheckNode : public CmpNode {
+public:
+  enum {
+    Control,
+    ObjOrSubKlass,
+    SuperKlass
+  };
 
-ZMarkCache::~ZMarkCache() {
-  // Evict all entries
-  for (size_t i = 0; i < ZMarkCacheSize; i++) {
-    _cache[i].evict();
+  SubTypeCheckNode(Compile* C, Node* obj_or_subklass, Node* superklass)
+    : CmpNode(obj_or_subklass, superklass) {
+    init_class_id(Class_SubTypeCheck);
+    init_flags(Flag_is_macro);
+    C->add_macro_node(this);
   }
-}
+
+  Node* Ideal(PhaseGVN *phase, bool can_reshape);
+  virtual const Type* sub(const Type*, const Type*) const;
+  Node* Identity(PhaseGVN* phase) { return this; }
+
+  virtual int Opcode() const;
+  const Type* bottom_type() const { return TypeInt::CC; }
+  bool depends_only_on_test() const { return false; };
+};
+
+#endif // SHARE_OPTO_SUBTYPENODE_HPP
