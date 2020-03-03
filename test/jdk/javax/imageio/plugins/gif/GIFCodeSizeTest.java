@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,39 +21,32 @@
  * questions.
  */
 
-/*
+/**
  * @test
- * @bug 8223769
- * @summary Test running with StressReflectiveCode enabled.
- * @run main/othervm -Xcomp -XX:+IgnoreUnrecognizedVMOptions -XX:+StressReflectiveCode
- *                   compiler.arguments.TestStressReflectiveCode
+ * @bug 8238842
+ * @summary Test incorrect code size results in IOException
  */
 
-package compiler.arguments;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
-public class TestStressReflectiveCode {
+public class GIFCodeSizeTest {
 
-    public static void main(String[] args) {
-        VALUES.clone();
-        VALUES2.clone();
-    }
+    static final byte[] DATA =  {
+        (byte)0x47, (byte)0x49, (byte)0x46, (byte)0x38, (byte)0x37,
+        (byte)0x61, (byte)0x02, (byte)0x00, (byte)0x02, (byte)0x00,
+        (byte)0x80, (byte)0x00, (byte)0x80, (byte)0x00, (byte)0xff,
+        (byte)0xff, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x2c,
+        (byte)0x00, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x02,
+        (byte)0x00, (byte)0x02, (byte)0x00, (byte)0x00, (byte)0x12,
+        (byte)0x02, (byte)0x84, (byte)0x51, (byte)0x00, (byte)0x3b
+    };
 
-    public static class Payload implements Cloneable {
-        int i1;
-        int i2;
-        int i3;
-        int i4;
-
-        public Object clone() {
-          try {
-            return super.clone();
-          } catch (CloneNotSupportedException e) {
-          }
-          return null;
+    public static void main(String[] args) /*throws Exception */{
+        try {
+            ImageIO.read(new ByteArrayInputStream(DATA));
+        } catch (IOException e) {
         }
     }
-
-    private static final int[]   VALUES = new int[]{3, 4, 5};
-    private static final Payload VALUES2 = new Payload();
 }
-
