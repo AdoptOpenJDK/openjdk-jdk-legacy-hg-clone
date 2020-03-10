@@ -1,10 +1,12 @@
 /*
- * Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -21,33 +23,14 @@
  * questions.
  */
 
+package jdk.internal.event;
+
 /**
- * @test
- * @bug 6579789
- * @summary Internal error "c1_LinearScan.cpp:1429 Error: assert(false,"")" in debuggee with fastdebug VM
- *
- * @run main/othervm -Xcomp -XX:+IgnoreUnrecognizedVMOptions -XX:UseSSE=0
- *      -XX:CompileCommand=compileonly,compiler.c1.Test6579789::bug
- *      compiler.c1.Test6579789
+ * Event for the start of an OS procsss
  */
 
-package compiler.c1;
-
-public class Test6579789 {
-    public static void main(String[] args) {
-        bug(4);
-    }
-    public static void bug(int n) {
-        float f = 1;
-        int i = 1;
-        try {
-            int x = 1 / n; // instruction that can trap
-            f = 2;
-            i = 2;
-            int y = 2 / n; // instruction that can trap
-        } catch (Exception ex) {
-            f++;
-            i++;
-        }
-    }
+public final class ProcessStartEvent extends Event {
+    public long pid;
+    public String directory;
+    public String command;
 }

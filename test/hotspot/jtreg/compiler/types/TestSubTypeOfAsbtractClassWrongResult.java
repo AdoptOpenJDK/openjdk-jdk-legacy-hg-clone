@@ -23,30 +23,42 @@
 
 /**
  * @test
- * @bug 8238384
- * @summary CTW: C2 compilation fails with "assert(store != load->find_exact_control(load->in(0))) failed: dependence cycle found"
+ * @bug 8240195
+ * @summary subtype check with abstract class that has no children classes can sometimes be constant folded
+ * @requires vm.compiler2.enabled
  *
- * @run main/othervm -XX:-BackgroundCompilation TestCopyOfBrokenAntiDependency
+ * @run main/othervm -XX:-BackgroundCompilation TestSubTypeOfAsbtractClassWrongResult
  *
  */
 
-import java.util.Arrays;
 
-public class TestCopyOfBrokenAntiDependency {
-
+public class TestSubTypeOfAsbtractClassWrongResult {
     public static void main(String[] args) {
         for (int i = 0; i < 20_000; i++) {
-            test(100);
+            if (!test1(A.class)) {
+                throw new RuntimeException("Wrong result");
+            }
+            test2(new Object());
+            test3(new Exception());
         }
     }
 
-    private static Object test(int length) {
-        Object[] src  = new Object[length]; // non escaping
-        final Object[] dst = Arrays.copyOf(src, 10); // can't be removed
-        final Object[] dst2 = Arrays.copyOf(dst, 100);
-        // load is control dependent on membar from previous copyOf
-        // but has memory edge to first copyOf.
-        final Object v = dst[0];
-        return v;
+    private static boolean test1(Class c) {
+        return A.class.isAssignableFrom(c);
+    }
+
+    private static boolean test2(Object o) {
+        return o instanceof A;
+    }
+
+    private static void test3(Exception e) {
+        try {
+            throw e;
+        } catch (A ex1) {
+        } catch (Exception ex2) {
+        }
+    }
+
+    static abstract class A extends Exception {
     }
 }
