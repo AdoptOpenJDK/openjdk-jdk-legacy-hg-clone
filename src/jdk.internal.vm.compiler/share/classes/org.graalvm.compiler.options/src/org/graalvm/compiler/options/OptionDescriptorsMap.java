@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,23 +22,30 @@
  */
 
 
-package org.graalvm.compiler.nodes.memory;
+package org.graalvm.compiler.options;
 
-import jdk.internal.vm.compiler.word.LocationIdentity;
+import java.util.Iterator;
+
+import jdk.internal.vm.compiler.collections.EconomicMap;
 
 /**
- * Maps a {@linkplain LocationIdentity location} to the last node that (potentially) wrote to the
- * location.
+ * A {@link OptionDescriptor} implementation that wraps an existing map from {@link String}s to
+ * {@link OptionDescriptor}s.
  */
-public interface MemoryMap {
+public final class OptionDescriptorsMap implements OptionDescriptors {
+    private final EconomicMap<String, OptionDescriptor> map;
 
-    /**
-     * Gets the last node that that (potentially) wrote to {@code locationIdentity}.
-     */
-    MemoryKill getLastLocationAccess(LocationIdentity locationIdentity);
+    public OptionDescriptorsMap(EconomicMap<String, OptionDescriptor> map) {
+        this.map = map;
+    }
 
-    /**
-     * Gets the location identities in the domain of this map.
-     */
-    Iterable<LocationIdentity> getLocations();
+    @Override
+    public OptionDescriptor get(String key) {
+        return map.get(key);
+    }
+
+    @Override
+    public Iterator<OptionDescriptor> iterator() {
+        return map.getValues().iterator();
+    }
 }
