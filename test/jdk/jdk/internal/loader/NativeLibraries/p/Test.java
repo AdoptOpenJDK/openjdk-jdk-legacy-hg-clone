@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2019, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,28 +19,19 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
+package p;
 
-#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHMETRICS_HPP
-#define SHARE_GC_SHENANDOAH_SHENANDOAHMETRICS_HPP
+public class Test implements Runnable {
+    private final Runnable r;
+    public Test(Runnable r) {
+        this.r = r;
+    }
 
-#include "gc/shenandoah/shenandoahHeap.hpp"
-
-class ShenandoahMetricsSnapshot : public StackObj {
-private:
-  ShenandoahHeap* _heap;
-  size_t _used_before, _used_after;
-  double _if_before, _if_after;
-  double _ef_before, _ef_after;
-
-public:
-  ShenandoahMetricsSnapshot();
-
-  void snap_before();
-  void snap_after();
-
-  bool is_good_progress();
-};
-
-#endif // SHARE_GC_SHENANDOAH_SHENANDOAHMETRICS_HPP
+    /**
+     * Tests if the native library is loaded.
+     */
+    public void run() {
+        r.run();
+    }
+}
