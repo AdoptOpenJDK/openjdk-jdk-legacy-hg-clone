@@ -56,7 +56,7 @@ size_t ShenandoahHeapRegion::MaxTLABSizeWords = 0;
 ShenandoahHeapRegion::PaddedAllocSeqNum ShenandoahHeapRegion::_alloc_seq_num;
 
 ShenandoahHeapRegion::ShenandoahHeapRegion(HeapWord* start, size_t index, bool committed) :
-  _region_number(index),
+  _index(index),
   _bottom(start),
   _end(start + RegionSizeWords),
   _new_top(NULL),
@@ -65,7 +65,6 @@ ShenandoahHeapRegion::ShenandoahHeapRegion(HeapWord* start, size_t index, bool c
   _top(start),
   _tlab_allocs(0),
   _gclab_allocs(0),
-  _shared_allocs(0),
   _seqnum_last_alloc_mutator(0),
   _live_data(0),
   _critical_pins(0),
@@ -76,10 +75,6 @@ ShenandoahHeapRegion::ShenandoahHeapRegion(HeapWord* start, size_t index, bool c
   if (ZapUnusedHeapArea && committed) {
     SpaceMangler::mangle_region(MemRegion(_bottom, _end));
   }
-}
-
-size_t ShenandoahHeapRegion::region_number() const {
-  return _region_number;
 }
 
 void ShenandoahHeapRegion::report_illegal_transition(const char *method) {
@@ -315,7 +310,6 @@ void ShenandoahHeapRegion::clear_live_data() {
 void ShenandoahHeapRegion::reset_alloc_metadata() {
   _tlab_allocs = 0;
   _gclab_allocs = 0;
-  _shared_allocs = 0;
   _seqnum_last_alloc_mutator = 0;
 }
 
@@ -323,7 +317,6 @@ void ShenandoahHeapRegion::reset_alloc_metadata_to_shared() {
   if (used() > 0) {
     _tlab_allocs = 0;
     _gclab_allocs = 0;
-    _shared_allocs = used() >> LogHeapWordSize;
     if (ShenandoahHeap::heap()->is_traversal_mode()) {
       update_seqnum_last_alloc_mutator();
     }
@@ -339,7 +332,7 @@ void ShenandoahHeapRegion::update_seqnum_last_alloc_mutator() {
 }
 
 size_t ShenandoahHeapRegion::get_shared_allocs() const {
-  return _shared_allocs * HeapWordSize;
+  return used() - (_tlab_allocs + _gclab_allocs) * HeapWordSize;
 }
 
 size_t ShenandoahHeapRegion::get_tlab_allocs() const {
@@ -377,7 +370,7 @@ size_t ShenandoahHeapRegion::garbage() const {
 
 void ShenandoahHeapRegion::print_on(outputStream* st) const {
   st->print("|");
-  st->print(SIZE_FORMAT_W(5), this->_region_number);
+  st->print(SIZE_FORMAT_W(5), this->_index);
 
   switch (_state) {
     case _empty_uncommitted:
@@ -461,12 +454,12 @@ void ShenandoahHeapRegion::oop_iterate_humongous(OopIterateClosure* blk) {
 ShenandoahHeapRegion* ShenandoahHeapRegion::humongous_start_region() const {
   ShenandoahHeap* heap = ShenandoahHeap::heap();
   assert(is_humongous(), "Must be a part of the humongous region");
-  size_t reg_num = region_number();
+  size_t i = index();
   ShenandoahHeapRegion* r = const_cast<ShenandoahHeapRegion*>(this);
   while (!r->is_humongous_start()) {
-    assert(reg_num > 0, "Sanity");
-    reg_num --;
-    r = heap->get_region(reg_num);
+    assert(i > 0, "Sanity");
+    i--;
+    r = heap->get_region(i);
     assert(r->is_humongous(), "Must be a part of the humongous region");
   }
   assert(r->is_humongous_start(), "Must be");
@@ -698,7 +691,7 @@ void ShenandoahHeapRegion::do_uncommit() {
 void ShenandoahHeapRegion::set_state(RegionState to) {
   EventShenandoahHeapRegionStateChange evt;
   if (evt.should_commit()){
-    evt.set_index((unsigned)region_number());
+    evt.set_index((unsigned) index());
     evt.set_start((uintptr_t)bottom());
     evt.set_used(used());
     evt.set_from(_state);
@@ -713,7 +706,7 @@ void ShenandoahHeapRegion::record_pin() {
 }
 
 void ShenandoahHeapRegion::record_unpin() {
-  assert(pin_count() > 0, "Region " SIZE_FORMAT " should have non-zero pins", region_number());
+  assert(pin_count() > 0, "Region " SIZE_FORMAT " should have non-zero pins", index());
   Atomic::sub(&_critical_pins, (size_t)1);
 }
 

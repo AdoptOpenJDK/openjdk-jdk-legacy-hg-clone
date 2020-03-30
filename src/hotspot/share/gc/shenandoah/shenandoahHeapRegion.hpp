@@ -238,7 +238,7 @@ private:
   static PaddedAllocSeqNum _alloc_seq_num;
 
   // Never updated fields
-  size_t const _region_number;
+  size_t const _index;
   HeapWord* const _bottom;
   HeapWord* const _end;
 
@@ -254,7 +254,6 @@ private:
 
   size_t _tlab_allocs;
   size_t _gclab_allocs;
-  size_t _shared_allocs;
 
   uint64_t _seqnum_last_alloc_mutator;
 
@@ -354,7 +353,9 @@ public:
     return _alloc_seq_num.value - 1;
   }
 
-  size_t region_number() const;
+  inline size_t index() const {
+    return _index;
+  }
 
   // Allocation (return NULL if full)
   inline HeapWord* allocate(size_t word_size, ShenandoahAllocRequest::Type type);
