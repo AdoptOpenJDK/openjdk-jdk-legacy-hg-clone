@@ -46,6 +46,7 @@
 #include "gc/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc/shenandoah/shenandoahHeapRegionSet.hpp"
+#include "gc/shenandoah/shenandoahIUMode.hpp"
 #include "gc/shenandoah/shenandoahMarkCompact.hpp"
 #include "gc/shenandoah/shenandoahMarkingContext.inline.hpp"
 #include "gc/shenandoah/shenandoahMemoryPool.hpp"
@@ -397,6 +398,8 @@ void ShenandoahHeap::initialize_heuristics() {
   if (ShenandoahGCMode != NULL) {
     if (strcmp(ShenandoahGCMode, "normal") == 0) {
       _gc_mode = new ShenandoahNormalMode();
+    } else if (strcmp(ShenandoahGCMode, "iu") == 0) {
+      _gc_mode = new ShenandoahIUMode();
     } else if (strcmp(ShenandoahGCMode, "passive") == 0) {
       _gc_mode = new ShenandoahPassiveMode();
     } else {
@@ -406,6 +409,19 @@ void ShenandoahHeap::initialize_heuristics() {
     ShouldNotReachHere();
   }
   _gc_mode->initialize_flags();
+  if (_gc_mode->is_diagnostic() && !UnlockDiagnosticVMOptions) {
+    vm_exit_during_initialization(
+            err_msg("GC mode \"%s\" is diagnostic, and must be enabled via -XX:+UnlockDiagnosticVMOptions.",
+                    _gc_mode->name()));
+  }
+  if (_gc_mode->is_experimental() && !UnlockExperimentalVMOptions) {
+    vm_exit_during_initialization(
+            err_msg("GC mode \"%s\" is experimental, and must be enabled via -XX:+UnlockExperimentalVMOptions.",
+                    _gc_mode->name()));
+  }
+  log_info(gc, init)("Shenandoah GC mode: %s",
+                     _gc_mode->name());
+
   _heuristics = _gc_mode->initialize_heuristics();
 
   if (_heuristics->is_diagnostic() && !UnlockDiagnosticVMOptions) {
