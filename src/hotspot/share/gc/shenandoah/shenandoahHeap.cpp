@@ -44,7 +44,7 @@
 #include "gc/shenandoah/shenandoahFreeSet.hpp"
 #include "gc/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc/shenandoah/shenandoahHeapRegion.hpp"
+#include "gc/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc/shenandoah/shenandoahHeapRegionSet.hpp"
 #include "gc/shenandoah/shenandoahIUMode.hpp"
 #include "gc/shenandoah/shenandoahMarkCompact.hpp"
@@ -144,8 +144,6 @@ public:
 };
 
 jint ShenandoahHeap::initialize() {
-  initialize_heuristics();
-
   //
   // Figure out heap sizing
   //
@@ -166,6 +164,9 @@ jint ShenandoahHeap::initialize() {
   Universe::check_alignment(init_byte_size, reg_size_bytes, "Shenandoah heap");
 
   _num_regions = ShenandoahHeapRegion::region_count();
+
+  // Now we know the number of regions, initialize the heuristics.
+  initialize_heuristics();
 
   size_t num_committed_regions = init_byte_size / reg_size_bytes;
   num_committed_regions = MIN2(num_committed_regions, _num_regions);
@@ -282,6 +283,7 @@ jint ShenandoahHeap::initialize() {
   //
   size_t region_align = align_up(sizeof(ShenandoahHeapRegion), SHENANDOAH_CACHE_LINE_SIZE);
   size_t region_storage_size = align_up(region_align * _num_regions, region_page_size);
+  region_storage_size = align_up(region_storage_size, os::vm_allocation_granularity());
 
   ReservedSpace region_storage(region_storage_size, region_page_size);
   MemTracker::record_virtual_memory_type(region_storage.base(), mtGC);
