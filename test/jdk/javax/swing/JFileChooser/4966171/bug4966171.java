@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,29 +21,50 @@
  * questions.
  */
 
-/*
- * @test
- * @bug 4300666
- * @summary Printing UIDefaults throws NoSuchElementExcept
- */
-
 import java.awt.EventQueue;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.concurrent.TimeUnit;
 
-import javax.swing.UIDefaults;
+import javax.swing.JFileChooser;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import static javax.swing.UIManager.getInstalledLookAndFeels;
 
-public final class bug4300666 {
+/**
+ * @test
+ * @bug 4966171 8240690
+ * @key headful
+ * @summary Tests that JFileChooser can be serialized
+ */
+public final class bug4966171 {
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         for (UIManager.LookAndFeelInfo laf : getInstalledLookAndFeels()) {
             EventQueue.invokeAndWait(() -> setLookAndFeel(laf));
-            EventQueue.invokeAndWait(() -> {
-                UIDefaults d = UIManager.getDefaults();
-                d.toString();
-            });
+            EventQueue.invokeAndWait(bug4966171::test);
+        }
+    }
+
+    private static void test() {
+        // Will run the test no more than 10 seconds per L&F
+        long endtime = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (System.nanoTime() < endtime) {
+            try {
+                var byteOut = new ByteArrayOutputStream();
+                try (var out = new ObjectOutputStream(byteOut)) {
+                    out.writeObject(new JFileChooser());
+                }
+                var byteIn = new ByteArrayInputStream(byteOut.toByteArray());
+                try (var in = new ObjectInputStream(byteIn)) {
+                    JFileChooser readFc = (JFileChooser) in.readObject();
+                }
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

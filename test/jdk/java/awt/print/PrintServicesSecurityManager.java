@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2003, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -23,15 +21,28 @@
  * questions.
  */
 
-#include "GraphicsPrimitiveMgr.h"
+import java.util.Arrays;
+
+import javax.print.PrintServiceLookup;
 
 /*
- * This is a dummy function that satisfies the MapAccelFunction
- * contract by simply returning a pointer to the indicated
- * C function.  This function is only executed in the absence
- * of an implementation specific function that maps the C
- * functions to accelerated versions of the same operation.
+ * @test
+ * @bug 8241829
  */
-AnyFunc *MapAccelFunction(AnyFunc *c_func) {
-    return c_func;
+public final class PrintServicesSecurityManager {
+
+    public static void main(String[] args) throws InterruptedException {
+        System.setSecurityManager(new SecurityManager());
+        test();
+        Thread.sleep(3000); // to be sure the pooling thread started
+        test();
+    }
+
+    private static void test() {
+        Object[] services = PrintServiceLookup.lookupPrintServices(null, null);
+        if (services.length != 0) {
+            System.err.println("services = " + Arrays.toString(services));
+            throw new RuntimeException("The array of Services must be empty");
+        }
+    }
 }
