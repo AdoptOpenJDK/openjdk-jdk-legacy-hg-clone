@@ -2720,7 +2720,7 @@ void ShenandoahHeap::entry_final_updaterefs() {
 
 void ShenandoahHeap::entry_full(GCCause::Cause cause) {
   static const char* msg = "Pause Full";
-  ShenandoahPausePhase gc_phase(msg);
+  ShenandoahPausePhase gc_phase(msg, true /* log_heap_usage */);
   EventMark em("%s", msg);
 
   ShenandoahGCPhase total_phase(ShenandoahPhaseTimings::total_pause);
@@ -2736,7 +2736,7 @@ void ShenandoahHeap::entry_full(GCCause::Cause cause) {
 void ShenandoahHeap::entry_degenerated(int point) {
   ShenandoahDegenPoint dpoint = (ShenandoahDegenPoint)point;
   const char* msg = degen_event_message(dpoint);
-  ShenandoahPausePhase gc_phase(msg);
+  ShenandoahPausePhase gc_phase(msg, true /* log_heap_usage */);
   EventMark em("%s", msg);
 
   ShenandoahGCPhase total_phase(ShenandoahPhaseTimings::total_pause);
@@ -2863,7 +2863,7 @@ void ShenandoahHeap::entry_preclean() {
 
 void ShenandoahHeap::entry_uncommit(double shrink_before) {
   static const char *msg = "Concurrent uncommit";
-  ShenandoahConcurrentPhase gc_phase(msg);
+  ShenandoahConcurrentPhase gc_phase(msg, true /* log_heap_usage */);
   EventMark em("%s", msg);
 
   ShenandoahGCSubPhase phase(ShenandoahPhaseTimings::conc_uncommit);
