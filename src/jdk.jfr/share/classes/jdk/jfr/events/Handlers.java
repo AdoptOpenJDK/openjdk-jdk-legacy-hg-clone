@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,28 +23,16 @@
  * questions.
  */
 
-package jdk.internal.access;
+package jdk.jfr.events;
+import jdk.jfr.internal.handlers.EventHandler;
+import jdk.jfr.internal.Utils;
 
-import java.io.IOException;
-import java.net.URL;
-import java.security.CodeSource;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.Attributes;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
-
-public interface JavaUtilJarAccess {
-    public boolean jarFileHasClassPathAttribute(JarFile jar) throws IOException;
-    public CodeSource[] getCodeSources(JarFile jar, URL url);
-    public CodeSource getCodeSource(JarFile jar, URL url, String name);
-    public Enumeration<String> entryNames(JarFile jar, CodeSource[] cs);
-    public Enumeration<JarEntry> entries2(JarFile jar);
-    public void setEagerValidation(JarFile jar, boolean eager);
-    public List<Object> getManifestDigests(JarFile jar);
-    public Attributes getTrustedAttributes(Manifest man, String name);
-    public void ensureInitialization(JarFile jar);
-    public boolean isInitializing();
-    public JarEntry entryFor(JarFile file, String name);
+public final class Handlers {
+    public final static EventHandler SOCKET_READ = Utils.getHandler(SocketReadEvent.class);
+    public final static EventHandler SOCKET_WRITE = Utils.getHandler(SocketWriteEvent.class);
+    public final static EventHandler FILE_READ = Utils.getHandler(FileReadEvent.class);
+    public final static EventHandler FILE_WRITE = Utils.getHandler(FileWriteEvent.class);
+    public final static EventHandler FILE_FORCE = Utils.getHandler(FileForceEvent.class);
+    public final static EventHandler ERROR_THROWN = Utils.getHandler(ErrorThrownEvent.class);
+    public final static EventHandler EXCEPTION_THROWN = Utils.getHandler(ExceptionThrownEvent.class);
 }
