@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2013, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -21,25 +19,28 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
+ *
  */
 
-#ifndef JAVA_MD_SOLINUX_H
-#define JAVA_MD_SOLINUX_H
+#include "precompiled.hpp"
+#include "gc/g1/g1InitLogger.hpp"
+#include "logging/log.hpp"
+#include "runtime/globals.hpp"
+#include "utilities/globalDefinitions.hpp"
 
-#include <sys/time.h>
-uint64_t CounterGet(void);
-#define Counter2Micros(counts)    (counts)
+void G1InitLogger::print_heap() {
+  log_info(gc, init)("Heap Region Size: " SIZE_FORMAT "M", G1HeapRegionSize / M);
+  GCInitLogger::print_heap();
+}
 
-/* pointer to environment */
-extern char **environ;
+void G1InitLogger::print_workers() {
+  GCInitLogger::print_workers();
+  if (G1ConcRefinementThreads > 0) {
+    log_info(gc, init)("Concurrent Refinement Workers: %u", G1ConcRefinementThreads);
+  }
+}
 
-/*
- *      A collection of useful strings. One should think of these as #define
- *      entries, but actual strings can be more efficient (with many compilers).
- */
-static const char *user_dir = "/java";
-
-#include <dlfcn.h>
-#include <pthread.h>
-
-#endif /* JAVA_MD_SOLINUX_H */
+void G1InitLogger::print() {
+  G1InitLogger init_log;
+  init_log.print_all();
+}

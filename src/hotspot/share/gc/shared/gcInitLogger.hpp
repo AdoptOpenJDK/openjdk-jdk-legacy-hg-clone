@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2019, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,24 +22,25 @@
  *
  */
 
-#ifndef SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHCOMPACTHEURISTICS_HPP
-#define SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHCOMPACTHEURISTICS_HPP
+#ifndef SHARE_GC_SHARED_GCINITLOGGER_HPP
+#define SHARE_GC_SHARED_GCINITLOGGER_HPP
 
-#include "gc/shenandoah/heuristics/shenandoahHeuristics.hpp"
+#include "memory/allocation.hpp"
 
-class ShenandoahCompactHeuristics : public ShenandoahHeuristics {
-public:
-  ShenandoahCompactHeuristics();
-
-  virtual bool should_start_gc() const;
-
-  virtual void choose_collection_set_from_regiondata(ShenandoahCollectionSet* cset,
-                                                     RegionData* data, size_t size,
-                                                     size_t actual_free);
-
-  virtual const char* name()     { return "Compact"; }
-  virtual bool is_diagnostic()   { return false; }
-  virtual bool is_experimental() { return false; }
+class GCInitLogger : public StackObj {
+ protected:
+  const char* large_pages_support();
+  virtual void print_version();
+  virtual void print_cpu();
+  virtual void print_memory();
+  virtual void print_large_pages();
+  virtual void print_numa();
+  virtual void print_compressed_oops();
+  virtual void print_heap();
+  virtual void print_workers();
+ public:
+  void print_all();
+  static void print();
 };
 
-#endif // SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHCOMPACTHEURISTICS_HPP
+#endif //SHARE_GC_SHARED_GCINITLOGGER_HPP

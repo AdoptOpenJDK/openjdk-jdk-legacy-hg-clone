@@ -21,15 +21,33 @@
  * questions.
  */
 
-/*
- * @test
- * @bug 8244946
- * @summary Run simple test with -XX:+Verbose and -Xlog:methodhandles.
- *
- * @run main/othervm -XX:+IgnoreUnrecognizedVMOptions -XX:+Verbose -Xlog:methodhandles TestMethodHandlesVerbose
+/* @test
+ * @bug 8166358
+ * @summary verify that -Xcheck:jni finds a bad utf8 name for class name.
+ * @library /test/lib
+ * @run main/native/othervm FindClassUtf8 test
  */
 
-public class TestMethodHandlesVerbose {
-    public static void main(String[] args) {
+import jdk.test.lib.process.ProcessTools;
+import jdk.test.lib.process.OutputAnalyzer;
+
+public final class FindClassUtf8 {
+
+    static {
+        System.loadLibrary("FindClassUtf8");
+    }
+
+    native static void nTest();
+
+    public static void main(String... args) throws Exception {
+        if (args.length == 1) {
+            // run java -Xcheck:jni FindClassUtf8 and check that the -Xcheck:jni message comes out.
+            ProcessTools.executeTestJvm("-Xcheck:jni", "-XX:-CreateCoredumpOnCrash", "FindClassUtf8")
+                      .shouldContain("JNI class name is not a valid UTF8 string")
+                      .shouldNotHaveExitValue(0);  // you get a core dump from -Xcheck:jni failures
+        } else {
+            // Run the test
+            nTest();
+        }
     }
 }

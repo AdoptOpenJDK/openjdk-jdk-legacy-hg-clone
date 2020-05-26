@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2019, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,28 +22,18 @@
  *
  */
 
-#ifndef SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHAGGRESSIVEHEURISTICS_HPP
-#define SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHAGGRESSIVEHEURISTICS_HPP
+#ifndef SHARE_GC_G1_G1INITLOGGER_HPP
+#define SHARE_GC_G1_G1INITLOGGER_HPP
 
-#include "gc/shenandoah/heuristics/shenandoahHeuristics.hpp"
+#include "gc/shared/gcInitLogger.hpp"
 
-class ShenandoahAggressiveHeuristics : public ShenandoahHeuristics {
-public:
-  ShenandoahAggressiveHeuristics();
+class G1InitLogger : public GCInitLogger {
+ protected:
+  virtual void print_heap();
+  virtual void print_workers();
 
-  virtual void choose_collection_set_from_regiondata(ShenandoahCollectionSet* cset,
-                                                     RegionData* data, size_t size,
-                                                     size_t free);
-
-  virtual bool should_start_gc() const;
-
-  virtual bool should_process_references();
-
-  virtual bool should_unload_classes();
-
-  virtual const char* name()     { return "Aggressive"; }
-  virtual bool is_diagnostic()   { return true; }
-  virtual bool is_experimental() { return false; }
+ public:
+  static void print();
 };
 
-#endif // SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHAGGRESSIVEHEURISTICS_HPP
+#endif //SHARE_GC_G1_G1INITLOGGER_HPP
