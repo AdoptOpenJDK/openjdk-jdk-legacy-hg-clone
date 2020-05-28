@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -21,25 +19,22 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
+ *
  */
 
 /*
- * Usage: jjs jrtls.js
+ * @test
+ * @bug 8243936
+ * @summary Ensure non-writeable system properties are not writeable
  *
- * Recursively list the content of / directory of the jrt fs.
- *
- * @implNote This script needs to maintain JDK 8 source compatibility.
- *
- * It is used internally in the JDK to implement jimage/jrtfs access,
- * but also compiled and delivered as part of the jrtfs.jar to support access
- * to the jimage file provided by the shipped JDK by tools running on JDK 8.
+ * @run main/othervm -Djava.vm.name=Unexpected NonWriteableProperty java.vm.name Unexpected
  */
 
-// classes used
-var Files = Java.type("java.nio.file.Files");
-var FileSystems = Java.type("java.nio.file.FileSystems");
-var URI = Java.type("java.net.URI");
-
-var fs = FileSystems.getFileSystem(URI.create("jrt:/"));
-var root = fs.getPath('/');
-Files.walk(root).forEach(print);
+public class NonWriteableProperty {
+    public static void main(String[] args) {
+        if (System.getProperty(args[0]).equals(args[1])) {
+            throw new RuntimeException("Non-writeable system property " +
+                                       args[0] + " was rewritten");
+        }
+    }
+}
